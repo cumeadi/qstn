@@ -2,6 +2,7 @@ package aws
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/joho/godotenv"
 	"github.com/nfnt/resize"
 	"image"
@@ -14,6 +15,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 )
 
 var con *s3.S3
@@ -34,39 +36,93 @@ func init() {
 	buk = con.Bucket(k)
 }
 
-func PutImage(id string, file *multipart.FileHeader) {
-	open, _ := file.Open()
-	bytz, _ := ioutil.ReadAll(open)
+func PutFiles(id string, files []*multipart.FileHeader) error {
+	nf := len(files)
+	// Success / Error chan
+	sc := make(chan bool, nf)
+	ec := make(chan error, nf)
 
-	path := filePath(id, file.Filename)
-	kind := file.Header["Content-Type"][0]
+	for _, file := range files {
+		go func(file *multipart.FileHeader) {
+			path := filePath(id, file.Filename)
+			if isImage(file) {
+				putImage(path, file, sc, ec)
+				return
+			}
+			putFile(path, file, sc, ec)
+		}(file)
+	}
 
-	for _, size := range sizes {
-		s := appendToFile(path, size)
-		// Scale each size for retina
-		for _, dpr := range [3]uint{3, 2, 1} {
-			p := appendToFile(s, "@"+strconv.Itoa(int(dpr))+"x")
-			b := resizeImage(bytz, size*dpr, kind)
-			PutRaw(p, b, kind)
+	for {
+		select {
+		case _ = <-sc:
+			nf--
+		case err := <-ec:
+			return err
+		}
+		if nf == 0 {
+			break
 		}
 	}
+
+	return nil
 }
 
-func PutFile(id string, file *multipart.FileHeader) {
+func putImage(path string, file *multipart.FileHeader, sc chan bool, ec chan error) {
 	open, _ := file.Open()
 	bytz, _ := ioutil.ReadAll(open)
 
-	path := filePath(id, file.Filename)
 	kind := file.Header["Content-Type"][0]
 
-	PutRaw(path, bytz, kind)
+	var wg sync.WaitGroup
+	wg.Add(len(sizes))
+
+	for _, size := range sizes {
+		go func(size uint) {
+			_path := appendToFile(path, size)
+			for _, dpr := range [3]uint{3, 2, 1} {
+				wg.Add(1)
+				go func(dpr uint) {
+					// Path to resized image and dpr (image200@2x)
+					p := appendToFile(_path, "@"+strconv.Itoa(int(dpr))+"x")
+					// Resize image
+					b := resizeImage(bytz, size*dpr, kind)
+					// Send to S3
+					putRaw(p, b, kind, ec)
+					// DONE
+					wg.Done()
+				}(dpr)
+			}
+			// DONE
+			wg.Done()
+		}(size)
+	}
+
+	wg.Wait()
+	// Success
+	sc <- true
 }
 
-func PutRaw(path string, bytz []byte, kind string) {
+func putFile(path string, file *multipart.FileHeader, sc chan bool, ec chan error) {
+	open, _ := file.Open()
+	bytz, _ := ioutil.ReadAll(open)
+
+	kind := file.Header["Content-Type"][0]
+
+	putRaw(path, bytz, kind, ec)
+
+	// Success
+	sc <- true
+}
+
+func putRaw(path string, bytz []byte, kind string, ec chan error) {
 	err := buk.Put(path, bytz, kind, s3.BucketOwnerFull)
+	// Error?
 	if err != nil {
-		panic(err)
+		ec <- err
 	}
+	// Success
+	fmt.Println(path)
 }
 
 func resizeImage(bytz []byte, width uint, kind string) []byte {
@@ -95,4 +151,13 @@ func appendToFile(file string, val interface{}) string {
 
 func filePath(id, file string) string {
 	return id + "/" + file
+}
+
+func isImage(file *multipart.FileHeader) bool {
+	switch file.Header["Content-Type"][0] {
+	case "image/jpeg", "image/png":
+		return true
+	default:
+		return false
+	}
 }

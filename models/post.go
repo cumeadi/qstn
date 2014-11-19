@@ -19,6 +19,7 @@ type Post struct {
 	Views     int           `json:"views"`
 	Downloads int           `json:"downloads"`
 	Private   bool          `json:"private"`
+	Updated   time.Time     `json:"updated"`
 	Made      time.Time     `json:"made"`
 }
 
@@ -31,10 +32,21 @@ func (_ *Post) Collection() string {
 }
 
 func (p *Post) BeforeCreate() {
-	p.setSlug()
 	p.Views = 0
-	p.Made = time.Now()
 	p.Downloads = 0
+	// Created time
+	p.Made = time.Now()
+	// If the slug isn't
+	// already set, create
+	// one using the title.
+	if p.Slug != "" {
+		p.setSlug()
+	}
+}
+
+func (p *Post) BeforeSave() {
+	// Updated time
+	p.Updated = time.Now()
 }
 
 func (p *Post) setSlug() {
@@ -44,5 +56,4 @@ func (p *Post) setSlug() {
 }
 
 func (_ *Post) AfterCreate() {}
-func (_ *Post) BeforeSave()  {}
 func (_ *Post) AfterSave()   {}

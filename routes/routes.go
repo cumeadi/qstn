@@ -1,15 +1,18 @@
 package routes
 
 import (
-	"github.com/bmizerany/pat"
 	"github.com/codegangsta/negroni"
-	"net/http"
+	"github.com/daryl/zeus"
 )
 
-func Map(m *pat.PatternServeMux, n *negroni.Negroni) {
-	m.Get("/posts", http.HandlerFunc(postsGet))
-	m.Post("/posts", http.HandlerFunc(postsCreate))
-	m.Get("/posts/:id", http.HandlerFunc(postsShow))
+func Map(m *zeus.Mux, n *negroni.Negroni) {
+	m.GET("/posts", postsGet)
+	m.POST("/posts", postsCreate)
+	m.GET("/posts/:id", postsShow)
 
-	m.Get("/session", http.HandlerFunc(sessionGet))
+	m.GET("/users", usersGet)
+	m.POST("/users", usersCreate)
+	m.GET("/users/:id", usersShow)
+
+	m.GET("/session", sessionGet)
 }

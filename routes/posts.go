@@ -1,14 +1,15 @@
 package routes
 
 import (
-	"fmt"
 	"github.com/daryl/sketchy-api/models"
 	"github.com/daryl/sketchy-api/utils"
 	"github.com/daryl/sketchy-api/utils/aws"
 	"gopkg.in/mgo.v2/bson"
+	"mime/multipart"
 	"net/http"
-	"strings"
 )
+
+type assets map[string]*multipart.FileHeader
 
 func postsGet(w http.ResponseWriter, r *http.Request) {
 	var post *models.Post
@@ -23,91 +24,64 @@ func postsShow(w http.ResponseWriter, r *http.Request) {
 	var post *models.Post
 
 	models.Find(post, bson.M{
-		"slug": r.URL.Query().Get(":id"),
+		"slug": r.URL.Query().Get("id"),
 	}).One(&post)
+
+	// TODO: Change
+	if inc := r.URL.Query().Get("inc"); inc != "" {
+		switch inc {
+		case "downloads":
+			post.Downloads++
+		case "views":
+			post.Views++
+		}
+		models.Update(post)
+	}
 
 	utils.JSON(w, post)
 }
 
 func postsCreate(w http.ResponseWriter, r *http.Request) {
-	// Parse form (25MB-ish)
 	r.ParseMultipartForm((1 << 20) * 24)
-	// Parse form values
+
 	ff := r.MultipartForm.File
 	fv := r.MultipartForm.Value
 	id := bson.NewObjectId()
-	// New Post instance
+
 	p := &models.Post{
 		Id:      id,
 		Title:   fv["title"][0],
 		Desc:    fv["desc"][0],
+		Tags:    fv["tags"],
 		Images:  []string{},
 		Private: false,
 	}
 
-	// Convert tags to array
-	if _, ok := fv["tags"]; ok {
-		tags := strings.Split(fv["tags"][0], ",")
-		for idx, t := range tags {
-			tags[idx] = strings.TrimSpace(t)
-		}
-		p.Tags = tags
+	if val, ok := ff["thumb"]; ok {
+		p.Thumb = val[0].Filename
 	}
 
-	// Is it private?
-	if _, yes := fv["private"]; yes {
+	if val, ok := ff["file"]; ok {
+		p.File = val[0].Filename
+	}
+
+	if _, ok := fv["private"]; ok {
 		p.Private = true
 	}
 
-	// Create thumbnail
-	for _, header := range ff["thumb"] {
-		p.Thumb = header.Filename
-		aws.PutImage(id.Hex(), header)
+	for _, val := range ff["images"] {
+		p.Images = append(p.Images, val.Filename)
 	}
 
-	// Create images
-	for _, header := range ff["images"] {
-		p.Images = append(p.Images, header.Filename)
-		aws.PutImage(id.Hex(), header)
+	files := []*multipart.FileHeader{}
+
+	for _, items := range ff {
+		files = append(files, items...)
 	}
 
-	// Create file
-	for _, header := range ff["file"] {
-		p.File = header.Filename
-		aws.PutFile(id.Hex(), header)
-	}
-
-	fmt.Println(p)
+	aws.PutFiles(id.Hex(), files)
 
 	models.Insert(p)
 
 	utils.JSON(w, p)
 }
-
-// func postsUpdate(w http.ResponseWriter, h http.Request) {
-// 	// Parse form (25MB-ish)
-// 	r.ParseMultipartForm((1 << 20) * 24)
-// 	// Parse form values
-// 	ff := r.MultipartForm.File
-// 	fv := r.MultipartForm.Value
-//
-// 	var post *models.Post
-// 	models.Find(post, bson.M{
-// 		"_id": fv["_id"],
-// 	}).One(&post)
-//
-// 	// Is it private?
-// 	if _, yes := fv["private"]; yes {
-// 		post.Private = true
-// 	}
-//
-// 	for _, header := range ff["thumb"] {
-// 		// New image, delete old one
-// 		aws.PutImage(id.Hex(), header)
-// 	}
-//
-// 	for _, header := range ff["images"] {
-// 		// New image, delete old one
-// 		aws.PutImage(id.Hex(), header)
-// 	}
-// }
