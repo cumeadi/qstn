@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-type assets map[string]*multipart.FileHeader
-
 func postsGet(w http.ResponseWriter, r *http.Request) {
 	var post *models.Post
 	var posts []*models.Post
@@ -23,20 +21,11 @@ func postsGet(w http.ResponseWriter, r *http.Request) {
 func postsShow(w http.ResponseWriter, r *http.Request) {
 	var post *models.Post
 
-	models.Find(post, bson.M{
+	models.Find(post, M{
 		"slug": r.URL.Query().Get("id"),
 	}).One(&post)
 
-	// TODO: Change
-	if inc := r.URL.Query().Get("inc"); inc != "" {
-		switch inc {
-		case "downloads":
-			post.Downloads++
-		case "views":
-			post.Views++
-		}
-		models.Update(post)
-	}
+	post.AsJSON()
 
 	utils.JSON(w, post)
 }
@@ -79,9 +68,39 @@ func postsCreate(w http.ResponseWriter, r *http.Request) {
 		files = append(files, items...)
 	}
 
+	// PUT files to Amazon S3.
 	aws.PutFiles(id.Hex(), files)
 
 	models.Insert(p)
 
+	w.WriteHeader(201)
 	utils.JSON(w, p)
+}
+
+func postsView(w http.ResponseWriter, r *http.Request) {
+	var post *models.Post
+
+	models.Find(post, M{
+		"slug": r.URL.Query().Get("id"),
+	}).One(&post)
+
+	if post != nil {
+		w.WriteHeader(201)
+		post.Views++
+		models.Update(post)
+	}
+}
+
+func postsDownload(w http.ResponseWriter, r *http.Request) {
+	var post *models.Post
+
+	models.Find(post, M{
+		"slug": r.URL.Query().Get("id"),
+	}).One(&post)
+
+	if post != nil {
+		w.WriteHeader(201)
+		post.Downloads++
+		models.Update(post)
+	}
 }
