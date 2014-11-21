@@ -1,7 +1,7 @@
 package models
 
 import (
-	"api/utils/db"
+	"github.com/daryl/skatchy/lib/db"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )

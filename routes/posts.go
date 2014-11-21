@@ -1,31 +1,38 @@
 package routes
 
 import (
-	"github.com/daryl/sketchy-api/models"
-	"github.com/daryl/sketchy-api/utils"
-	"github.com/daryl/sketchy-api/utils/aws"
+	"fmt"
+	m "github.com/daryl/skatchy/models"
+	"github.com/daryl/skatchy/utils"
 	"gopkg.in/mgo.v2/bson"
-	"mime/multipart"
 	"net/http"
 )
 
 func postsGet(w http.ResponseWriter, r *http.Request) {
-	var post *models.Post
-	var posts []*models.Post
+	var post *m.Post
+	var posts []*m.Post
 
-	models.Find(post, nil).All(&posts)
+	m.Find(post, nil).All(&posts)
+
+	for i, _ := range posts {
+		posts[i].ToJSON()
+	}
 
 	utils.JSON(w, posts)
 }
 
 func postsShow(w http.ResponseWriter, r *http.Request) {
-	var post *models.Post
+	var post *m.Post
 
-	models.Find(post, M{
+	m.Find(post, bson.M{
 		"slug": r.URL.Query().Get("id"),
 	}).One(&post)
 
-	post.AsJSON()
+	if post != nil {
+		post.ToJSON()
+	}
+
+	fmt.Println(post)
 
 	utils.JSON(w, post)
 }
@@ -33,74 +40,29 @@ func postsShow(w http.ResponseWriter, r *http.Request) {
 func postsCreate(w http.ResponseWriter, r *http.Request) {
 	r.ParseMultipartForm((1 << 20) * 24)
 
-	ff := r.MultipartForm.File
+	//ff := r.MultipartForm.File
 	fv := r.MultipartForm.Value
 	id := bson.NewObjectId()
 
-	p := &models.Post{
+	//hex := id.Hex()
+
+	p := &m.Post{
 		Id:      id,
 		Title:   fv["title"][0],
 		Desc:    fv["desc"][0],
 		Tags:    fv["tags"],
-		Images:  []string{},
 		Private: false,
 	}
 
-	if val, ok := ff["thumb"]; ok {
-		p.Thumb = val[0].Filename
-	}
-
-	if val, ok := ff["file"]; ok {
-		p.File = val[0].Filename
-	}
-
-	if _, ok := fv["private"]; ok {
-		p.Private = true
-	}
-
-	for _, val := range ff["images"] {
-		p.Images = append(p.Images, val.Filename)
-	}
-
-	files := []*multipart.FileHeader{}
-
-	for _, items := range ff {
-		files = append(files, items...)
-	}
-
-	// PUT files to Amazon S3.
-	aws.PutFiles(id.Hex(), files)
-
-	models.Insert(p)
+	//	files := []*multipart.FileHeader{}
+	//
+	//	for _, header := range ff["thumb"] {
+	//		p.Thumb.File = header.Filename
+	//		p.Thumb.Pref = hex
+	//		// Upload to S3.
+	//		p.Thumb.Put(header)
+	//	}
 
 	w.WriteHeader(201)
 	utils.JSON(w, p)
-}
-
-func postsView(w http.ResponseWriter, r *http.Request) {
-	var post *models.Post
-
-	models.Find(post, M{
-		"slug": r.URL.Query().Get("id"),
-	}).One(&post)
-
-	if post != nil {
-		w.WriteHeader(201)
-		post.Views++
-		models.Update(post)
-	}
-}
-
-func postsDownload(w http.ResponseWriter, r *http.Request) {
-	var post *models.Post
-
-	models.Find(post, M{
-		"slug": r.URL.Query().Get("id"),
-	}).One(&post)
-
-	if post != nil {
-		w.WriteHeader(201)
-		post.Downloads++
-		models.Update(post)
-	}
 }

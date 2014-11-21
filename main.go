@@ -2,15 +2,17 @@ package main
 
 import (
 	"github.com/codegangsta/negroni"
-	"github.com/daryl/sketchy-api/middle/cors"
-	"github.com/daryl/sketchy-api/middle/json"
-	"github.com/daryl/sketchy-api/routes"
+	"github.com/daryl/skatchy/middle/cors"
+	"github.com/daryl/skatchy/middle/json"
+	"github.com/daryl/skatchy/routes"
 	"github.com/daryl/zeus"
+	"os"
 )
 
 func main() {
 	m := zeus.New()
 	n := negroni.New()
+	p := os.Getenv("PORT")
 	// Middleware
 	n.Use(cors.New())
 	n.Use(json.New())
@@ -18,5 +20,5 @@ func main() {
 	routes.Map(m, n)
 	// Run server
 	n.UseHandler(m)
-	n.Run(":5000")
+	n.Run(":" + p)
 }
