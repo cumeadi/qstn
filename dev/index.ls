@@ -26,6 +26,7 @@ Router.run do
     Loading.emit 'start'
     fetch s .then (data) !->
       Loading.emit 'end'
+      ga 'send', 'pageview', s.path
       React.render e(H, {
         params: s.params
       }), document.body
