@@ -3,14 +3,14 @@
 sock = module.exports = (path) !->
   @_ws = new WebSocket "ws://#host/s/#path"
   @_ws.onmessage = recieve.bind @
-  @_fn = []
+  @_fn = null
 
 sock::send = (data) !->
   data = JSON.stringify data
   @_ws.send data
 
 sock::listen = (fn) !->
-  @_fn.push fn
+  @_fn = fn
 
 sock::kill = !->
   @_ws.close!
@@ -18,5 +18,4 @@ sock::kill = !->
 recieve = (res) !->
   data = JSON.parse do
     res.data
-  for fn in @_fn
-    fn data
+  @_fn data

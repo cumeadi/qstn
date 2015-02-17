@@ -22,10 +22,8 @@ _sock  = null
         params.id
 
     willTransitionTo: (t, params) !->
-      {id} = params
-      _sock := new sock id
-      _sock.listen do
-        @recieveData
+      _sock := new sock do
+        params.id
 
     willTransitionFrom: !->
       _sock.kill!
@@ -37,19 +35,16 @@ _sock  = null
     entry: EntryStore.get id
 
   componentWillMount: !->
-    {id}  = @props.params
-    _sock := new sock id
-    _sock.listen do
-      @recieveData
+    _sock.listen @recieveData
 
   componentWillReceiveProps: (props) !->
-    {params} = props; @setState {
+    {id} = props.params
+    _sock.listen @recieveData
+    @setState do
+      entry: EntryStore.get id
       selected:
-        if v = cookie.get params.id
+        if v = cookie.get id
         then Number v
-      entry: EntryStore.get do
-        params.id
-    }
 
   recieveData: (data) ->
     return if data.ping
