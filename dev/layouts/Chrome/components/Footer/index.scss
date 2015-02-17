@@ -1,0 +1,31 @@
+@import 'styles/vars';
+
+.chrome-footer {
+  font-size: $h6;
+  border-top: 1px solid $border;
+  padding: 15px 0 20px;
+  color: $light;
+}
+
+.chrome-footer .wrap {
+  display: flex;
+}
+
+.chrome-footer .wrap > * {
+  margin: 0;
+}
+
+.chrome-footer a {
+  color: $light;
+}
+
+.chrome-footer ul {
+  text-align: right;
+  list-style: none;
+  flex: 1;
+}
+
+.chrome-footer ul li {
+  margin: 0 0 0 10px;
+  display: inline;
+}

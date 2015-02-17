@@ -1,0 +1,42 @@
+@import './vars';
+@import './reset';
+
+html {
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: #fff;
+  font-size: $font-size;
+  font-family: $font-family;
+  line-height: $line-height;
+  color: $medium;
+}
+
+a {
+  text-decoration: underline;
+  color: $medium;
+}
+
+a:hover {
+  cursor: pointer;
+}
+
+h1, h4 {
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0 0 5px;
+}
+
+h1 {
+  font-size: $h1;
+}
+
+h4 {
+  font-size: $h4;
+}
+
+.loading {
+  pointer-events: none;
+  opacity: 0.6;
+}

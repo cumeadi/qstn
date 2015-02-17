@@ -1,0 +1,14 @@
+{
+	"ImportPath": "github.com/daryl/qstn",
+	"GoVersion": "go1.3.3",
+	"Deps": [
+		{
+			"ImportPath": "github.com/gorilla/websocket",
+			"Rev": "ab5b3a61f5b6aa323d66ece457334396c4ccdd03"
+		},
+		{
+			"ImportPath": "gopkg.in/mgo.v2",
+			"Rev": "231ce7e0549b5ce60d35ed805bff505cab7098e4"
+		}
+	]
+}

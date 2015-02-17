@@ -1,0 +1,46 @@
+@import 'styles/vars';
+
+.show-option {
+  padding: 8px 0;
+  position: relative;
+  align-items: center;
+  display: flex;
+}
+
+.show-option:first-child {
+  padding-top: 0;
+}
+
+.show-option .radio {
+  padding-right: 10px;
+  flex: 1;
+}
+
+.show-option .meta {
+  display: flex;
+  font-size: $h6;
+  width: 85px;
+}
+
+.show-option .meta > div {
+  text-align: right;
+  flex: 50%;
+}
+
+.show-option .meta .perc {
+  text-align: left;
+}
+
+.show-option .bar {
+  height: 1px;
+  background: $border;
+  position: absolute;
+  left: 0; right: 0;
+  bottom: 0;
+}
+
+.show-option .bar div {
+  background: linear-gradient(to right, $blue, $purple);
+  transition: all .35s cubic-bezier(.69,.24,.4,1);
+  height: 1px;
+}

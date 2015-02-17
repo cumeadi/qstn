@@ -1,0 +1,20 @@
+body {
+  margin: 0;
+}
+
+input,
+select,
+textarea,
+button {
+  font: inherit;
+  font-size: 100%;
+}
+
+img {
+  vertical-align: middle;
+  max-width: 100%;
+}
+
+:focus {
+  outline: 0;
+}

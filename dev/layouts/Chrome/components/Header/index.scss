@@ -1,0 +1,19 @@
+@import 'styles/vars';
+
+.chrome-header {
+  margin: 20px 0 0;
+}
+
+.chrome-header .wrap {
+  align-items: center;
+  display: flex;
+}
+
+.chrome-header p {
+  font-size: $h5;
+  text-align: right;
+  color: $light;
+  font-weight: 400;
+  margin: 0;
+  flex: 1;
+}

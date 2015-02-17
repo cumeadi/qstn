@@ -1,0 +1,13 @@
+@import 'styles/vars';
+
+.chrome .wrap {
+  width: $site-width;
+  margin: auto;
+}
+
+@media (max-width: $site-width + 40px) {
+  .chrome .wrap {
+     padding: 0 20px;
+     width: auto;
+  }
+}

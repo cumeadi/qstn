@@ -1,0 +1,60 @@
+@import 'styles/vars';
+
+.entry-index {
+
+}
+
+.entry-index div[placeholder] {
+  position: relative;
+  cursor: text;
+}
+
+.entry-index div[placeholder]:empty:before {
+  content: attr(placeholder);
+  color: $light;
+}
+
+.entry-index .question {
+  margin: 0 0 15px;
+  font-size: $h1;
+}
+
+.entry-index .options {
+  margin: 0 0 20px;
+}
+
+.entry-index .option {
+  font-size: $h3;
+}
+
+.entry-index .option:not(:last-child) {
+  margin: 0 0 5px;
+}
+
+.entry-index .option:after {
+  content: '*';
+  display: block;
+  position: absolute;
+  top: 1px; left: -20px;
+  font-size: $h1;
+  color: $medium;
+}
+
+.entry-index .option:empty:after {
+  color: $light;
+}
+
+.entry-index button {
+  padding: 0;
+  font-size: $h2;
+  font-weight: bold;
+  background: none;
+  color: $medium;
+  cursor: pointer;
+  border: 0;
+}
+
+.entry-index button[disabled] {
+  pointer-events: none;
+  color: $wash;
+}

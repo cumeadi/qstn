@@ -1,0 +1,23 @@
+@import 'styles/vars';
+
+.entry-show .options {
+  margin: 20px 0;
+}
+
+.entry-show .actions,
+.entry-show .actions a {
+  color: $light;
+}
+
+.entry-show .actions {
+  font-size: $h6;
+  display: flex;
+}
+
+.entry-show .actions .social {
+  flex: 1;
+}
+
+.entry-show .actions .total {
+  color: $light;
+}
