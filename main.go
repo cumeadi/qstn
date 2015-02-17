@@ -28,7 +28,7 @@ func main() {
 	mux.Add("/q/", entries, filter)
 	mux.Add("/s/", socket)
 
-	mux.Listen(":7777")
+	mux.Listen(os.Getenv("PORT"))
 }
 
 func catch(c *app.Context) {
