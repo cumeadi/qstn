@@ -1,9 +1,5 @@
 @import 'styles/vars';
 
-.entry-index {
-
-}
-
 .entry-index div[placeholder] {
   position: relative;
   cursor: text;
@@ -57,4 +53,10 @@
 .entry-index button[disabled] {
   pointer-events: none;
   color: $wash;
+}
+
+@media (max-width: $site-width + 80px) {
+  .entry-index .option:after {
+    display: none;
+  }
 }
