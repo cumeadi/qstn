@@ -20,6 +20,15 @@ _sock  = null
     resolve: (params) ->
       Entry.get do
         params.id
+
+    willTransitionTo: (t, params) !->
+      {id} = params
+      _sock := new sock id
+      _sock.listen do
+        @recieveData
+
+    willTransitionFrom: !->
+      _sock.kill!
   }
 
   getInitialState: ->
@@ -41,9 +50,6 @@ _sock  = null
       entry: EntryStore.get do
         params.id
     }
-
-  componentWillUnmount: !->
-    _sock.kill!
 
   recieveData: (data) ->
     return if data.ping
