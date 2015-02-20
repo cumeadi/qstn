@@ -130,7 +130,7 @@ func socket(c *app.Context) {
 
 	for {
 		if err = ws.ReadJSON(&entry); err != nil {
-			return
+			break
 		}
 
 		coll.Update(bson.M{

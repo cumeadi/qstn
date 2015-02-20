@@ -1,14 +1,12 @@
 package api
 
-import (
-	"encoding/json"
-	"github.com/daryl/qstn/app"
-	"github.com/daryl/qstn/models"
-	"github.com/daryl/qstn/utils/num"
-	"github.com/daryl/qstn/utils/str"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
-)
+import "github.com/daryl/qstn/app"
+import "github.com/daryl/qstn/models"
+import "github.com/daryl/qstn/utils/num"
+import "github.com/daryl/qstn/utils/str"
+import "gopkg.in/mgo.v2/bson"
+import "gopkg.in/mgo.v2"
+import "encoding/json"
 
 func EntryGet(c *app.Context, slug string) (int, models.Entry) {
 	var entry models.Entry
