@@ -1,23 +1,22 @@
 
-import micro, {send,json} from 'micro';
+import render from './render';
+import {Server} from 'http';
 import mux from './lib/mux';
-import chalk from 'chalk';
-import db from './lib/db';
 import r from './routes';
 import mime from 'mime';
 import fs from 'fs';
 
 /**
+ * Expose `Server()`
+ */
+
+export default Server((...args) => app(...args));
+
+/**
  * Public dir
  */
 
-const PUBLIC = './static';
-
-/**
- * Index tmpl
- */
-
-const INDEX = fs.readFileSync('index.html', 'utf8');
+export let PUBLIC = './static';
 
 /**
  * Set routes
@@ -27,118 +26,104 @@ mux.get('/entries/:id', r.get);
 mux.post('/entries', r.create);
 
 /**
- * Serve files
- *
- * @param {Object} req
- * @param {Object} res
- * @param {Date} start
- * @return {Boolean}
- * @api private
- */
-
-const file = async (req, res, start) => {
-  if(0 > req.url.indexOf('.')) return;
-
-  const path = PUBLIC + req.url;
-
-  try {
-    fs.lstatSync(path)
-  } catch(e) {
-    return false;
-  }
-
-  const body = fs.readFileSync(path);
-  const type = mime.lookup(path);
-
-  res.setHeader('Content-Type', type);
-  res.writeHead(200);
-  res.end(body);
-  log(req, 200);
-
-  return true;
-};
-
-/**
- * Error handler
- *
- * @param {Object} req
- * @param {Object} res
- * @param {Error} err
- */
-
-const error = (req, res, {message}) => {
-  const body = {body, code: 500};
-  send(res, 500, body);
-  log(req, 500);
-};
-
-/**
- * HTTP logs
- *
- * @param {Request} req
- * @param {Number} code
- * @api private
- */
-
-function log({url,method,$st}, code) {
-  let end = new Date - $st + 'ms';
-  let out = ['--->', method];
-
-  if(code < 400) {
-    out.push(chalk.green(code));
-  } else {
-    out.push(chalk.red(code));
-  }
-
-  out = out.concat([
-    chalk.grey(url),
-    chalk.grey(end),
-  ]).join(' ');
-
-  console.log(out);
-}
-
-/**
- * Server
+ * Application
  *
  * @param {Object} req
  * @param {Object} res
  * @api public
  */
 
-const server = async (req, res) => {
-  req.$st = new Date;
+const app = async (req, res) => {
+  let [code,body] = file(req, res);
+  let ajax = req.headers['X-QN'];
 
-  let {url,method,headers} = req;
-  let ajax = headers['X-QN'];
-
-  if(await file(req, res)) return;
-
-  if('undefined' == typeof ajax) {
-    send(res, 200, INDEX);
-    log(req, 200);
-    return;
+  if(body) {
+    send(res, code, body);
+    return
   }
 
-  let [fn,args] = mux.fetch(req);
+  // Render Deku application
+  if('undefined' == typeof ajax) {
+    res.setHeader('Content-Type', 'text/html');
+    body = await render(req);
+    send(res, 200, body);
+    return
+  }
 
+  let [fn,obj] = mux.fetch(req);
+
+  // No route has been matched
   if('undefined' == typeof fn) {
     send(res, 404);
-    log(req, 404);
-    return;
+    return
   }
 
-  let [code,body] = await fn(req, args);
+  try {
+    [code,body] = await fn(req, obj);
+  } catch({message}) {
+    body = {body: message, code: 500};
+    code = 500;
+  }
 
-  send(res, code, {code,body});
-  log(req, code);
+  send(res, code, {
+    body,
+    code,
+  });
 };
 
 /**
- * Expose `micro()`
+ * Serve files
+ *
+ * @param {Object} req
+ * @return {Array}
+ * @api private
  */
 
-export default micro(server, {
-  onError: error,
-});
+const file = (req, res) => {
+  if(0 > req.url.indexOf('.')) return [];
+
+  const path = PUBLIC + req.url;
+
+  try {
+    fs.lstatSync(path)
+  } catch(e) {
+    return [];
+  }
+
+  const body = fs.readFileSync(path);
+  const type = mime.lookup(path);
+
+  res.setHeader('Content-Type', type);
+
+  return [200, body];
+};
+
+/**
+ * Render JSON
+ *
+ * @param {Response} res
+ * @param {Number} code
+ * @param {Object} obj
+ * @api public
+ */
+
+function json(res, code, obj={}) {
+  res.setHeader('Content-Type', 'application/json');
+  const body = JSON.stringify(obj);
+  send(res, code, body);
+}
+
+/**
+ * Send request
+ *
+ * @param {Response} res
+ * @param {Number} code
+ * @param {String} body
+ * @api public
+ */
+
+function send(res, code, body) {
+  res.writeHead(code);
+  res.end(body);
+}
 

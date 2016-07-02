@@ -1,4 +1,8 @@
 {
-  "ignore": "node_modules/*",
-  "exec": "babel-node"
+  "exec": "babel-node",
+  "ignore": [
+    "node_modules",
+    "static",
+    "src"
+  ]
 }
