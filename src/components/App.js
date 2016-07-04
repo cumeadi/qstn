@@ -9,12 +9,9 @@ import {element} from 'deku';
  * @api public
  */
 
-function render() {
-  return (
-    <div>
-      App!
-    </div>
-  );
+function render({route}) {
+  if(!route) return <div/>;
+  return element(route);
 }
 
 /**

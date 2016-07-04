@@ -10,6 +10,7 @@
     "babel-plugin-transform-runtime": "^6.9.0",
     "babel-preset-es2015": "^6.9.0",
     "debug": "^2.2.0",
+    "kerberos": "0.0.21",
     "mime": "^1.3.4",
     "mongodb": "^2.0.55",
     "monk": "https://github.com/vccabral/monk.git",
@@ -23,9 +24,12 @@
   "devDependencies": {
     "babel-loader": "^6.2.4",
     "babel-preset-stage-2": "^6.11.0",
+    "debounce": "^1.0.0",
     "deku": "^2.0.0-rc16",
+    "domready": "^1.0.8",
     "morphdom": "^1.4.3",
     "nodemon": "^1.9.2",
+    "noop": "^0.2.2",
     "redux": "^3.5.2",
     "virtual-dom": "^2.1.1",
     "webpack": "^1.13.1"

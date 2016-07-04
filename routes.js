@@ -2,7 +2,7 @@
 import db from './lib/db';
 
 /**
- * Entries collection
+ * Entries coll
  */
 
 const tbl = db.get('entries');

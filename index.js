@@ -1,39 +1,45 @@
 
-import {Server} from 'ws';
+import {Server as WebSocket} from 'ws';
+import {Server} from 'http';
 import r from './routes';
 import app from './app';
+
+/**
+ * Server
+ */
+
+const server = Server((...args) => app(...args));
 
 /**
  * WS Server
  */
 
-const wss = new Server({
-  server: app,
-});
+const wss = new WebSocket({server});
 
 /**
- * Player 2...
+ * Expose `server`
+ */
+
+export default server;
+
+/**
+ * WebSocket handler
  *
  * @param {WebSocket} ws
  * @api private
  */
 
 wss.on('connection', (ws) => {
-  let {url} = ws.upgradeReq;
-  let pass = /\/q\/(\w+)$/.exec(url);
-  let id;
-  let rm;
-
-  if(!pass) return;
-
-  id = pass[1];
+  let id = ws.upgradeReq.url;
 
   if(!hub[id]) hub[id] = [];
 
-  rm = hub[id];
-
   ws.on('message', message);
   ws.on('close', close);
+
+  let room = hub[id];
+
+  room.push(ws);
 
   /**
    * Message event
@@ -43,9 +49,10 @@ wss.on('connection', (ws) => {
    */
 
   async function message(raw) {
+    if('PING' == raw) return;
     let obj = JSON.parse(raw);
     let out = JSON.stringify(await r.ws(id, obj));
-    rm.filter(x => x != ws)
+    room.filter(x => x != ws)
       .forEach(ws => {
         ws.send(out)
       });
@@ -58,15 +65,10 @@ wss.on('connection', (ws) => {
    */
 
   async function close() {
-    let x = rm.indexOf(ws);
-    rm.splice(x, 1);
+    let x = room.indexOf(ws);
+    if(-1 == x) return;
+    room.splice(x, 1);
   }
 
 });
-
-/**
- * Expose `app`
- */
-
-export default app;
 

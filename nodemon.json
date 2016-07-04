@@ -2,7 +2,6 @@
   "exec": "babel-node",
   "ignore": [
     "node_modules",
-    "static",
-    "src"
+    "static"
   ]
 }

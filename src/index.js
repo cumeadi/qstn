@@ -2,23 +2,69 @@
 import {createApp,element} from 'deku';
 import App from './components/App';
 import {createStore} from 'redux';
-import reducer from './reducer';
+import reducers from './reducers';
+import debounce from 'debounce';
+import ready from 'domready';
+
+/**
+ * Current route
+ */
+
+let _route = null;
+
+/**
+ * DOM node
+ */
+
+const DOMNode = document.body;
 
 /**
  * Redux store
  */
 
-const {dispatch,getState} = createStore(reducer);
+const {dispatch,getState,subscribe} = createStore(reducers);
 
 /**
- * Render fn
+ * Update handler
  */
 
-const render = createApp(document.body, dispatch);
+const update = () => render(<App/>, getState());
 
 /**
- * Render <App/>
+ * Render handler
  */
 
-render(<App/>, getState);
+const render = createApp(DOMNode, dispatch);
+
+/**
+ * Redux listener
+ */
+
+subscribe(debounce(async () => {
+  let state = getState();
+  let {route} = state;
+  let {fetch} = route;
+
+  fetch = fetch || noop;
+
+  if(route != _route) {
+    _route = route;
+  } else {
+    return;
+  }
+
+  await fetch(dispatch);
+
+  update();
+}));
+
+/**
+ * Render
+ */
+
+onload = e => dispatch({
+  value: location.pathname,
+  type: 'SET_ROUTE',
+});
+
 

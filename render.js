@@ -2,6 +2,7 @@
 import Html from './src/components/Html';
 import App from './src/components/App';
 import {element,string} from 'deku';
+import mux from './src/lib/mux';
 
 /**
  * Render app
@@ -12,8 +13,15 @@ import {element,string} from 'deku';
  */
 
 export default async ({url}) => {
+  let node = <Html><App/></Html>;
   let html = '<!doctype html>';
-  html += string.render(<Html/>);
+
+  try {
+  html += string.render(node);
+  } catch(e) {
+    console.log(e.stack);
+    //console.log(e);
+  }
   return html;
 };
 
